@@ -1,3 +1,6 @@
+const auth = require("../midleware/auth");
+const admin = require("../midleware/admin");
+const { Category, validate } = require("../models/category");
 const express = require("express");
 const router = express.Router();
 
@@ -6,8 +9,8 @@ router.get("/", async (req, res) => {
   res.send(categories);
 });
 
-router.post("/", async (req, res) => {
-  const { error } = validateCategory(req.body);
+router.post("/", auth, async (req, res) => {
+  const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
   let category = new Category({ name: req.body.name });
   category = await category.save();
@@ -15,7 +18,7 @@ router.post("/", async (req, res) => {
 });
 
 router.put("/:id", async (req, res) => {
-  const { error } = validateCategory(req.body);
+  const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   const category = await Category.findOneAndUpdate(
@@ -32,7 +35,7 @@ router.put("/:id", async (req, res) => {
   res.send(category);
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", [auth, admin], async (req, res) => {
   const category = await Category.findOneAndRemove(req.params.id);
 
   if (!category)
